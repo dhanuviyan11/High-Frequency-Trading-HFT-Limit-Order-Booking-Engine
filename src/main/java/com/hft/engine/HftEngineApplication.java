@@ -169,9 +169,11 @@ public class HftEngineApplication extends Application {
         bottomSection.setPadding(new Insets(6, 16, 12, 16));
         root.setBottom(bottomSection);
 
-        Scene scene = new Scene(root, 1280, 900);
+        Scene scene = new Scene(root, 1400, 900);
         scene.setFill(BG_DARK);
         stage.setScene(scene);
+        stage.setMinWidth(1100);
+        stage.setMinHeight(700);
         stage.setOnCloseRequest(e -> shutdown());
         stage.show();
 
@@ -239,7 +241,9 @@ public class HftEngineApplication extends Application {
     private void startTickerAnimation() {
         Timeline tickerTimeline = new Timeline(new KeyFrame(Duration.millis(30), e -> {
             tickerOffset -= 1.5;
-            if (tickerOffset < -1500) {
+            // Reset based on actual label width so the strip loops cleanly
+            double halfWidth = tickerLabel.getWidth() / 3.0;
+            if (halfWidth > 0 && tickerOffset < -halfWidth) {
                 tickerOffset = 0;
                 updateTickerText();
             }
@@ -606,6 +610,7 @@ public class HftEngineApplication extends Application {
         HBox.setHgrow(latCard, Priority.ALWAYS);
         HBox.setHgrow(ordCard, Priority.ALWAYS);
         HBox.setHgrow(trdCard, Priority.ALWAYS);
+        metrics.setFillHeight(true);
 
         HBox panel = new HBox(12, ctrlBox, metrics);
         HBox.setHgrow(metrics, Priority.ALWAYS);
@@ -623,14 +628,20 @@ public class HftEngineApplication extends Application {
         VBox c = new VBox(1, t, val);
         c.setAlignment(Pos.CENTER);
         c.setPadding(new Insets(6, 10, 6, 10));
+        c.setMaxWidth(Double.MAX_VALUE);  // allow HGrow to distribute width evenly
         c.setStyle("-fx-background-color: #0a0e14; -fx-background-radius: 6; -fx-border-color: #1c2333; -fx-border-radius: 6;");
         return c;
     }
 
     private Label metricVal(String init) {
         Label l = new Label(init);
-        l.setMinWidth(70);
+        l.setMinWidth(80);
+        l.setMaxWidth(160);
+        l.setPrefWidth(120);
         l.setAlignment(Pos.CENTER);
+        // Prevent text overflow from expanding the card width
+        l.setWrapText(false);
+        l.setTextOverrun(javafx.scene.control.OverrunStyle.CLIP);
         return l;
     }
 
